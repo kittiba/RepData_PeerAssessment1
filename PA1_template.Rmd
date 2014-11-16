@@ -30,7 +30,7 @@ activitydata<-read.csv("activity.csv",header=TRUE)
 stepsPerDay<-aggregate(steps ~ date, data=activitydata,sum)
 
 #Trying to plot
-hist(stepsPerDay$steps)
+hist(stepsPerDay$steps,xlab="Sum of Steps", main="Total number of steps each day")
 
 #mean of steps/day
 print(aggregate(steps ~ date, data=activitydata,mean))
@@ -43,6 +43,18 @@ print(median(stepsPerDay$steps))
 ## What is the average daily activity pattern?
 
 
+```{r}
+
+#mean of steps per time interval
+#print(aggregate(steps ~ interval, data=activitydata,mean))
+stepsInterval<-aggregate(steps ~ interval, data=activitydata,mean)
+
+#Getting the time series
+timeSeries <- ts(stepsInterval$steps)
+
+plot(timeSeries, type="l", xlab="Interval", ylab="Average per Interval",main="Average Steps per Time interval")
+
+```
 
 ## Imputing missing values
 
