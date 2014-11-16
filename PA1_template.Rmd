@@ -7,12 +7,38 @@ output:
 
 
 ## Loading and preprocessing the data
-### This is my first commit
+
+```{r}
+#Checking to see if Zipped file exists
+if(file.exists("activity.zip")){
+        unzip("activity.zip", overwrite=TRUE)
+}
+
+#reading data
+activitydata<-read.csv("activity.csv",header=TRUE)
+
+```
 
 
 ## What is mean total number of steps taken per day?
 
+### Used aggregate function to get the mean/median of the steps/day based on date
+### Aggregate function ignores the NA values by default
 
+```{r}
+
+stepsPerDay<-aggregate(steps ~ date, data=activitydata,sum)
+
+#Trying to plot
+hist(stepsPerDay$steps)
+
+#mean of steps/day
+print(aggregate(steps ~ date, data=activitydata,mean))
+
+#median of steps/day
+print(median(stepsPerDay$steps))
+
+```
 
 ## What is the average daily activity pattern?
 
