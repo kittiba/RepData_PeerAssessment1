@@ -49,15 +49,82 @@ print(median(stepsPerDay$steps))
 #print(aggregate(steps ~ interval, data=activitydata,mean))
 stepsInterval<-aggregate(steps ~ interval, data=activitydata,mean)
 
+
 #Getting the time series
 timeSeries <- ts(stepsInterval$steps)
 
-plot(timeSeries, type="l", xlab="Interval", ylab="Average per Interval",main="Average Steps per Time interval")
+plot(timeSeries, type="l", xlab="Interval", ylab="Average",main="Average Steps per Time interval")
+
+highestInterval<-stepsInterval[which(stepsInterval$steps==max(stepsInterval$steps)),]
+print(highestInterval$interval)
 
 ```
 
 ## Imputing missing values
 
+### 1. Missing values
 
+```{r}
+
+#records with missing steps
+ok<-complete.cases(activitydata)
+
+#records with NA values
+print(sum(!ok))
+
+```
+
+### 2. Stategy for filling in missing values
+
+```{r}
+
+#print(aggregate(steps ~ interval, data=activitydata,mean))
+stepsInterval<-aggregate(steps ~ interval, data=activitydata,mean)
+
+roundedStepsIntervalData<-data.frame(stepsInterval$interval,round(stepsInterval$steps))
+names(roundedStepsIntervalData)<-c("interval", "averageSteps")
+print(roundedStepsIntervalData)
+addedActivitydata<-join(activitydata,roundedStepsIntervalData, by="interval")
+
+
+```
+
+### 3. Creating a new dataset that is equal to the original dataset but with the missing data filled in
+
+```{r}
+
+
+
+for(i in 1:nrow(addedActivitydata)){
+        temp<-addedActivitydata[i,]
+        
+        if(is.na(temp$steps)){
+                temp$steps<-temp$averageSteps
+        }
+        addedActivitydata[i,]<-temp
+}
+imputedActivityData<-addedActivitydata[,1:3]
+
+#print(imputedActivityData)
+
+
+```
+
+### 4. Histogram, mean and median with imputed activity data set
+
+```{r}
+
+stepsPerDay<-aggregate(steps ~ date, data=imputedActivityData,sum)
+
+#Trying to plot
+hist(stepsPerDay$steps,xlab="Sum of Steps", main="Total number of steps each day")
+
+#mean of steps/day
+print(aggregate(steps ~ date, data=imputedActivityData,mean))
+
+#median of steps/day
+print(median(stepsPerDay$steps))
+
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
