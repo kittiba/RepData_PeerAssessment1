@@ -27,22 +27,6 @@ activitydata<-read.csv("activity.csv",header=TRUE)
 Used aggregate function to get the mean/median of the steps/day based on date
 Aggregate function ignores the NA values by default
 
-Using the following logic to calcuate the mean. 
-
-1. Total all time intervals for a day 
-2. Calculate the mean for that day
-
-Using the following logic for median
-
-1. Totalling all steps for the day
-2. Calculating the median across the total steps for all days
-
-Max mean was observed on this day
-### 47 2012-11-23 73.5902778
-
-Median was observed to be the following
-### 10765
-
 ```{r}
 
 stepsPerDay<-aggregate(steps ~ date, data=activitydata,sum)
@@ -50,8 +34,43 @@ stepsPerDay<-aggregate(steps ~ date, data=activitydata,sum)
 #Trying to plot
 hist(stepsPerDay$steps,xlab="Sum of Steps", main="Total number of steps each day")
 
+
+```
+
+
+Using the following logic to calcuate the mean. 
+
+1. Total all time intervals for a day 
+2. Calculate the mean for that day
+
+
+
+Max mean was observed on this day (see below for means per day)
+
+### Internal #  Date            Mean
+### 47          2012-11-23      73.5902778
+
+
+
+```{r}
+
+
 #mean of steps/day
 print(aggregate(steps ~ date, data=activitydata,mean))
+
+
+```
+
+
+Using the following logic for median
+
+1. Totalling all steps for the day
+2. Calculating the median across the total steps for all days
+
+Median was observed to be the following
+### 10765
+
+```{r}
 
 #median of steps/day
 print(median(stepsPerDay$steps))
@@ -149,12 +168,14 @@ Complete set of values were visible for all days due to the imputing activity (n
 Values don't seem to really change (only minor changes). There was no change for the max mean observed.
 
 Max mean was observed to be the following day (same as first observation and also the same value)
-### 54 2012-11-23 73.5902778
+
+###    Internal #  Date            Mean
+### 54             2012-11-23      73.5902778
+
+
 
 Median only slightly changed
 ### 10762
-
-
 
 
 ```{r}
