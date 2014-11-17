@@ -8,6 +8,8 @@ output:
 
 ## Loading and preprocessing the data
 
+Looking if the zipped file exists before unzipping and reading the data into a activitydata data frame.
+
 ```{r}
 #Checking to see if Zipped file exists
 if(file.exists("activity.zip")){
@@ -22,8 +24,24 @@ activitydata<-read.csv("activity.csv",header=TRUE)
 
 ## What is mean total number of steps taken per day?
 
-### Used aggregate function to get the mean/median of the steps/day based on date
-### Aggregate function ignores the NA values by default
+Used aggregate function to get the mean/median of the steps/day based on date
+Aggregate function ignores the NA values by default
+
+Using the following logic to calcuate the mean. 
+
+1. Total all time intervals for a day 
+2. Calculate the mean for that day
+
+Using the following logic for median
+
+1. Totalling all steps for the day
+2. Calculating the median across the total steps for all days
+
+Max mean was observed on this day
+### 47 2012-11-23 73.5902778
+
+Median was observed to be the following
+### 10765
 
 ```{r}
 
@@ -42,6 +60,7 @@ print(median(stepsPerDay$steps))
 
 ## What is the average daily activity pattern?
 
+Using a time series plotting the average steps per time interval
 
 ```{r}
 
@@ -64,6 +83,8 @@ print(highestInterval$interval)
 
 ### 1. Missing values
 
+Using complete.cases() method and negating the records for getting a count of missing values
+
 ```{r}
 
 #records with missing steps
@@ -76,25 +97,34 @@ print(sum(!ok))
 
 ### 2. Stategy for filling in missing values
 
+The strategy is as follows.
+
+1. Get a mean value for each time interval
+2. Round the mean values
+3. Adding an additional column with the rounded values to the orginal activity data frame. This is done by joining on the time interval for each day. The idea is that when values as missing we can use the rounded mean values for the time interval.
+4. Prepping the data frame for later use.
+
 ```{r}
 
-#print(aggregate(steps ~ interval, data=activitydata,mean))
+#Getting the mean for each interval
 stepsInterval<-aggregate(steps ~ interval, data=activitydata,mean)
 
+#rounding the mean values
 roundedStepsIntervalData<-data.frame(stepsInterval$interval,round(stepsInterval$steps))
 names(roundedStepsIntervalData)<-c("interval", "averageSteps")
-print(roundedStepsIntervalData)
-addedActivitydata<-join(activitydata,roundedStepsIntervalData, by="interval")
 
+#adding the rounded steps for each time interval as a column for later processing
+addedActivitydata<-join(activitydata,roundedStepsIntervalData, by="interval")
 
 ```
 
 ### 3. Creating a new dataset that is equal to the original dataset but with the missing data filled in
 
+In this step we will use the newly added rounded column value instead of the NA value of the record. This will give us the imputed data set.
+
 ```{r}
 
-
-
+#looping through the data to replace values for NA values from the newly added rounded mean column
 for(i in 1:nrow(addedActivitydata)){
         temp<-addedActivitydata[i,]
         
@@ -103,17 +133,33 @@ for(i in 1:nrow(addedActivitydata)){
         }
         addedActivitydata[i,]<-temp
 }
-imputedActivityData<-addedActivitydata[,1:3]
 
-#print(imputedActivityData)
+#tidying the data frame
+imputedActivityData<-addedActivitydata[,1:3]
 
 
 ```
 
 ### 4. Histogram, mean and median with imputed activity data set
 
+This is simply plotting the same way as earlier using the imputed activity data set.
+
+Complete set of values were visible for all days due to the imputing activity (not missing values)
+
+Values don't seem to really change (only minor changes). There was no change for the max mean observed.
+
+Max mean was observed to be the following day (same as first observation and also the same value)
+### 54 2012-11-23 73.5902778
+
+Median only slightly changed
+### 10762
+
+
+
+
 ```{r}
 
+#Sum of steps per day
 stepsPerDay<-aggregate(steps ~ date, data=imputedActivityData,sum)
 
 #Trying to plot
@@ -122,9 +168,59 @@ hist(stepsPerDay$steps,xlab="Sum of Steps", main="Total number of steps each day
 #mean of steps/day
 print(aggregate(steps ~ date, data=imputedActivityData,mean))
 
+
 #median of steps/day
 print(median(stepsPerDay$steps))
 
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+For obvious reasons the weekends are more active with more spikes in time intervals directly observed from the plot when compared to weekdays.
+
+People tend to have more time over the weekends to work out.
+
+```{r}
+
+#Using weekdays to create a days factor
+imputedActivityData$days<-weekdays(as.Date(imputedActivityData$date))
+
+
+#splitting on days to figure out later which are weekdays and which are weekends
+imputedActivityDataDays<-split(imputedActivityData, imputedActivityData$days)
+
+#Calculating the weekdays
+Monday<-data.frame(imputedActivityDataDays$Monday)
+Tuesday<-data.frame(imputedActivityDataDays$Tuesday)
+Wednesday<-data.frame(imputedActivityDataDays$Wednesday)
+Thursday<-data.frame(imputedActivityDataDays$Thursday)
+Friday<-data.frame(imputedActivityDataDays$Friday)
+
+#using rbind to combine into one weekday data frame
+weekday<-rbind(Monday,Tuesday,Wednesday,Thursday,Friday)
+
+#calculating the mean
+weekdaystepsInterval<-aggregate(steps ~ interval, data=weekday,mean)
+weekdaystepsInterval$days<-"weekday"
+        
+
+#Calculating the weekends
+Saturday<-data.frame(imputedActivityDataDays$Saturday)
+Sunday<-data.frame(imputedActivityDataDays$Sunday)
+
+#using rbind to combine into one weekday data frame
+weekend<-rbind(Saturday,Sunday)
+
+#calculating the mean
+weekendstepsInterval<-aggregate(steps ~ interval, data=weekend,mean)
+weekendstepsInterval$days<-"weekend"
+
+#Combining weekday and weekend rows into all rows
+allrows<-rbind(weekdaystepsInterval,weekendstepsInterval)
+
+#plotting using xyplot
+library(lattice)
+xyplot(steps ~ interval|days,data=allrows, layout=c(1,2), type="l")
+
+
+```

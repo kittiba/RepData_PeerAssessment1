@@ -203,6 +203,8 @@ hr {
 <body>
 <h2>Loading and preprocessing the data</h2>
 
+<p>Looking if the zipped file exists before unzipping and reading the data into a activitydata data frame.</p>
+
 <pre><code class="r">#Checking to see if Zipped file exists
 if(file.exists(&quot;activity.zip&quot;)){
         unzip(&quot;activity.zip&quot;, overwrite=TRUE)
@@ -214,9 +216,30 @@ activitydata&lt;-read.csv(&quot;activity.csv&quot;,header=TRUE)
 
 <h2>What is mean total number of steps taken per day?</h2>
 
-<h3>Used aggregate function to get the mean/median of the steps/day based on date</h3>
+<p>Used aggregate function to get the mean/median of the steps/day based on date
+Aggregate function ignores the NA values by default</p>
 
-<h3>Aggregate function ignores the NA values by default</h3>
+<p>Using the following logic to calcuate the mean. </p>
+
+<ol>
+<li>Total all time intervals for a day </li>
+<li>Calculate the mean for that day</li>
+</ol>
+
+<p>Using the following logic for median</p>
+
+<ol>
+<li>Totalling all steps for the day</li>
+<li>Calculating the median across the total steps for all days</li>
+</ol>
+
+<p>Max mean was observed on this day</p>
+
+<h3>47 2012-11-23 73.5902778</h3>
+
+<p>Median was observed to be the following</p>
+
+<h3>10765</h3>
 
 <pre><code class="r">stepsPerDay&lt;-aggregate(steps ~ date, data=activitydata,sum)
 
@@ -295,6 +318,8 @@ print(median(stepsPerDay$steps))
 
 <h2>What is the average daily activity pattern?</h2>
 
+<p>Using a time series plotting the average steps per time interval</p>
+
 <pre><code class="r">#mean of steps per time interval
 #print(aggregate(steps ~ interval, data=activitydata,mean))
 stepsInterval&lt;-aggregate(steps ~ interval, data=activitydata,mean)
@@ -319,6 +344,8 @@ print(highestInterval$interval)
 
 <h3>1. Missing values</h3>
 
+<p>Using complete.cases() method and negating the records for getting a count of missing values</p>
+
 <pre><code class="r">#records with missing steps
 ok&lt;-complete.cases(activitydata)
 
@@ -331,311 +358,32 @@ print(sum(!ok))
 
 <h3>2. Stategy for filling in missing values</h3>
 
-<pre><code class="r">#print(aggregate(steps ~ interval, data=activitydata,mean))
+<p>The strategy is as follows.</p>
+
+<ol>
+<li>Get a mean value for each time interval</li>
+<li>Round the mean values</li>
+<li>Adding an additional column with the rounded values to the orginal activity data frame. This is done by joining on the time interval for each day. The idea is that when values as missing we can use the rounded mean values for the time interval.</li>
+<li>Prepping the data frame for later use.</li>
+</ol>
+
+<pre><code class="r">#Getting the mean for each interval
 stepsInterval&lt;-aggregate(steps ~ interval, data=activitydata,mean)
 
+#rounding the mean values
 roundedStepsIntervalData&lt;-data.frame(stepsInterval$interval,round(stepsInterval$steps))
 names(roundedStepsIntervalData)&lt;-c(&quot;interval&quot;, &quot;averageSteps&quot;)
-print(roundedStepsIntervalData)
-</code></pre>
 
-<pre><code>##     interval averageSteps
-## 1          0            2
-## 2          5            0
-## 3         10            0
-## 4         15            0
-## 5         20            0
-## 6         25            2
-## 7         30            1
-## 8         35            1
-## 9         40            0
-## 10        45            1
-## 11        50            0
-## 12        55            0
-## 13       100            0
-## 14       105            1
-## 15       110            0
-## 16       115            0
-## 17       120            0
-## 18       125            1
-## 19       130            2
-## 20       135            0
-## 21       140            0
-## 22       145            0
-## 23       150            0
-## 24       155            0
-## 25       200            0
-## 26       205            0
-## 27       210            1
-## 28       215            0
-## 29       220            0
-## 30       225            0
-## 31       230            0
-## 32       235            0
-## 33       240            0
-## 34       245            0
-## 35       250            2
-## 36       255            1
-## 37       300            0
-## 38       305            0
-## 39       310            0
-## 40       315            0
-## 41       320            0
-## 42       325            1
-## 43       330            2
-## 44       335            1
-## 45       340            0
-## 46       345            0
-## 47       350            0
-## 48       355            0
-## 49       400            1
-## 50       405            1
-## 51       410            3
-## 52       415            0
-## 53       420            0
-## 54       425            0
-## 55       430            4
-## 56       435            1
-## 57       440            3
-## 58       445            1
-## 59       450            3
-## 60       455            1
-## 61       500            0
-## 62       505            2
-## 63       510            3
-## 64       515            2
-## 65       520            3
-## 66       525            3
-## 67       530            2
-## 68       535            6
-## 69       540           16
-## 70       545           18
-## 71       550           39
-## 72       555           44
-## 73       600           31
-## 74       605           49
-## 75       610           54
-## 76       615           63
-## 77       620           50
-## 78       625           47
-## 79       630           52
-## 80       635           39
-## 81       640           44
-## 82       645           44
-## 83       650           37
-## 84       655           49
-## 85       700           44
-## 86       705           44
-## 87       710           51
-## 88       715           55
-## 89       720           50
-## 90       725           51
-## 91       730           56
-## 92       735           44
-## 93       740           52
-## 94       745           70
-## 95       750           58
-## 96       755           56
-## 97       800           73
-## 98       805           68
-## 99       810          129
-## 100      815          158
-## 101      820          171
-## 102      825          155
-## 103      830          177
-## 104      835          206
-## 105      840          196
-## 106      845          180
-## 107      850          183
-## 108      855          167
-## 109      900          143
-## 110      905          124
-## 111      910          109
-## 112      915          108
-## 113      920          104
-## 114      925           96
-## 115      930           66
-## 116      935           45
-## 117      940           25
-## 118      945           39
-## 119      950           35
-## 120      955           21
-## 121     1000           41
-## 122     1005           27
-## 123     1010           42
-## 124     1015           53
-## 125     1020           39
-## 126     1025           51
-## 127     1030           44
-## 128     1035           37
-## 129     1040           35
-## 130     1045           28
-## 131     1050           25
-## 132     1055           32
-## 133     1100           31
-## 134     1105           30
-## 135     1110           21
-## 136     1115           26
-## 137     1120           28
-## 138     1125           26
-## 139     1130           33
-## 140     1135           50
-## 141     1140           42
-## 142     1145           45
-## 143     1150           46
-## 144     1155           59
-## 145     1200           64
-## 146     1205           88
-## 147     1210           95
-## 148     1215           93
-## 149     1220           63
-## 150     1225           50
-## 151     1230           54
-## 152     1235           32
-## 153     1240           27
-## 154     1245           38
-## 155     1250           45
-## 156     1255           67
-## 157     1300           42
-## 158     1305           40
-## 159     1310           43
-## 160     1315           41
-## 161     1320           46
-## 162     1325           56
-## 163     1330           43
-## 164     1335           25
-## 165     1340           40
-## 166     1345           54
-## 167     1350           47
-## 168     1355           61
-## 169     1400           56
-## 170     1405           52
-## 171     1410           44
-## 172     1415           49
-## 173     1420           35
-## 174     1425           38
-## 175     1430           42
-## 176     1435           28
-## 177     1440           17
-## 178     1445           26
-## 179     1450           44
-## 180     1455           44
-## 181     1500           30
-## 182     1505           36
-## 183     1510           35
-## 184     1515           39
-## 185     1520           46
-## 186     1525           48
-## 187     1530           48
-## 188     1535           65
-## 189     1540           83
-## 190     1545           99
-## 191     1550          102
-## 192     1555           84
-## 193     1600           62
-## 194     1605           64
-## 195     1610           75
-## 196     1615           63
-## 197     1620           57
-## 198     1625           60
-## 199     1630           44
-## 200     1635           39
-## 201     1640           45
-## 202     1645           45
-## 203     1650           46
-## 204     1655           44
-## 205     1700           47
-## 206     1705           56
-## 207     1710           51
-## 208     1715           61
-## 209     1720           73
-## 210     1725           79
-## 211     1730           69
-## 212     1735           60
-## 213     1740           75
-## 214     1745           57
-## 215     1750           35
-## 216     1755           37
-## 217     1800           41
-## 218     1805           58
-## 219     1810           75
-## 220     1815           85
-## 221     1820           59
-## 222     1825           68
-## 223     1830           78
-## 224     1835           74
-## 225     1840           85
-## 226     1845           99
-## 227     1850           87
-## 228     1855           86
-## 229     1900           85
-## 230     1905           78
-## 231     1910           58
-## 232     1915           53
-## 233     1920           36
-## 234     1925           21
-## 235     1930           27
-## 236     1935           40
-## 237     1940           30
-## 238     1945           26
-## 239     1950           46
-## 240     1955           34
-## 241     2000           20
-## 242     2005           19
-## 243     2010           19
-## 244     2015           33
-## 245     2020           27
-## 246     2025           21
-## 247     2030           27
-## 248     2035           21
-## 249     2040           20
-## 250     2045           21
-## 251     2050           32
-## 252     2055           20
-## 253     2100           16
-## 254     2105           17
-## 255     2110           23
-## 256     2115           19
-## 257     2120           12
-## 258     2125            8
-## 259     2130           15
-## 260     2135           16
-## 261     2140            9
-## 262     2145            8
-## 263     2150            8
-## 264     2155            3
-## 265     2200            1
-## 266     2205            4
-## 267     2210            5
-## 268     2215            9
-## 269     2220            7
-## 270     2225            9
-## 271     2230           10
-## 272     2235            2
-## 273     2240            0
-## 274     2245            0
-## 275     2250            2
-## 276     2255            5
-## 277     2300            3
-## 278     2305            3
-## 279     2310            0
-## 280     2315            1
-## 281     2320            1
-## 282     2325            2
-## 283     2330            3
-## 284     2335            5
-## 285     2340            3
-## 286     2345            1
-## 287     2350            0
-## 288     2355            1
-</code></pre>
-
-<pre><code class="r">addedActivitydata&lt;-join(activitydata,roundedStepsIntervalData, by=&quot;interval&quot;)
+#adding the rounded steps for each time interval as a column for later processing
+addedActivitydata&lt;-join(activitydata,roundedStepsIntervalData, by=&quot;interval&quot;)
 </code></pre>
 
 <h3>3. Creating a new dataset that is equal to the original dataset but with the missing data filled in</h3>
 
-<pre><code class="r">for(i in 1:nrow(addedActivitydata)){
+<p>In this step we will use the newly added rounded column value instead of the NA value of the record. This will give us the imputed data set.</p>
+
+<pre><code class="r">#looping through the data to replace values for NA values from the newly added rounded mean column
+for(i in 1:nrow(addedActivitydata)){
         temp&lt;-addedActivitydata[i,]
 
         if(is.na(temp$steps)){
@@ -643,14 +391,29 @@ print(roundedStepsIntervalData)
         }
         addedActivitydata[i,]&lt;-temp
 }
-imputedActivityData&lt;-addedActivitydata[,1:3]
 
-#print(imputedActivityData)
+#tidying the data frame
+imputedActivityData&lt;-addedActivitydata[,1:3]
 </code></pre>
 
 <h3>4. Histogram, mean and median with imputed activity data set</h3>
 
-<pre><code class="r">stepsPerDay&lt;-aggregate(steps ~ date, data=imputedActivityData,sum)
+<p>This is simply plotting the same way as earlier using the imputed activity data set.</p>
+
+<p>Complete set of values were visible for all days due to the imputing activity (not missing values)</p>
+
+<p>Values don&#39;t seem to really change (only minor changes). There was no change for the max mean observed.</p>
+
+<p>Max mean was observed to be the following day (same as first observation and also the same value)</p>
+
+<h3>54 2012-11-23 73.5902778</h3>
+
+<p>Median only slightly changed</p>
+
+<h3>10762</h3>
+
+<pre><code class="r">#Sum of steps per day
+stepsPerDay&lt;-aggregate(steps ~ date, data=imputedActivityData,sum)
 
 #Trying to plot
 hist(stepsPerDay$steps,xlab=&quot;Sum of Steps&quot;, main=&quot;Total number of steps each day&quot;)
@@ -734,6 +497,53 @@ print(median(stepsPerDay$steps))
 </code></pre>
 
 <h2>Are there differences in activity patterns between weekdays and weekends?</h2>
+
+<p>For obvious reasons the weekends are more active with more spikes in time intervals directly observed from the plot when compared to weekdays.</p>
+
+<p>People tend to have more time over the weekends to work out.</p>
+
+<pre><code class="r">#Using weekdays to create a days factor
+imputedActivityData$days&lt;-weekdays(as.Date(imputedActivityData$date))
+
+
+#splitting on days to figure out later which are weekdays and which are weekends
+imputedActivityDataDays&lt;-split(imputedActivityData, imputedActivityData$days)
+
+#Calculating the weekdays
+Monday&lt;-data.frame(imputedActivityDataDays$Monday)
+Tuesday&lt;-data.frame(imputedActivityDataDays$Tuesday)
+Wednesday&lt;-data.frame(imputedActivityDataDays$Wednesday)
+Thursday&lt;-data.frame(imputedActivityDataDays$Thursday)
+Friday&lt;-data.frame(imputedActivityDataDays$Friday)
+
+#using rbind to combine into one weekday data frame
+weekday&lt;-rbind(Monday,Tuesday,Wednesday,Thursday,Friday)
+
+#calculating the mean
+weekdaystepsInterval&lt;-aggregate(steps ~ interval, data=weekday,mean)
+weekdaystepsInterval$days&lt;-&quot;weekday&quot;
+
+
+#Calculating the weekends
+Saturday&lt;-data.frame(imputedActivityDataDays$Saturday)
+Sunday&lt;-data.frame(imputedActivityDataDays$Sunday)
+
+#using rbind to combine into one weekday data frame
+weekend&lt;-rbind(Saturday,Sunday)
+
+#calculating the mean
+weekendstepsInterval&lt;-aggregate(steps ~ interval, data=weekend,mean)
+weekendstepsInterval$days&lt;-&quot;weekend&quot;
+
+#Combining weekday and weekend rows into all rows
+allrows&lt;-rbind(weekdaystepsInterval,weekendstepsInterval)
+
+#plotting using xyplot
+library(lattice)
+xyplot(steps ~ interval|days,data=allrows, layout=c(1,2), type=&quot;l&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-8"/> </p>
 
 </body>
 
